@@ -1,8 +1,8 @@
 // CubicSpline_ak1.cpp - Program for calculating a cubic spline to input data.
 // Written in Microsoft Visual Studio Express 2013 for Windows Desktop
-// 21 March 2016
+// 22 March 2016
 //
-// The sub-routines included in this program are translations of the FORTRAN routines PCHEV and PCHEZ 
+// This program is a translation of the FORTRAN routines PCHEV and PCHEZ 
 // written by David K.Kahaner, National Bureau of Standards.
 // From the book "Numerical Methods and Software"
 // D. Kahaner, C. Moler, and S. Nash
@@ -12,10 +12,9 @@
 //
 // http://www.netlib.org/slatec/
 //
-// To distinguish the routines posted below from others, an _ak1 suffix has been appended to them.
+// To distinguish this program from others, an _ak1 suffix has been appended to its name.
 //
-// A small main program is included also, to provide an example of how to use CubicSpline. In this 
-// example, data is input from a file to eliminate the need for a user to type data in via
+// In this program, data is input from a file to eliminate the need for a user to type data in via
 // the console.
 
 #include <iostream>
@@ -34,17 +33,17 @@ int main()
 {
 	char rflag = 0;	//Readiness flag 
 
-	cout << "                     CubicSpline_ak1   (21 March 2016)\n";
+	cout << "                     CubicSpline_ak1   (22 March 2016)\n";
 	cout << "=========================================================================== \n";
-	cout << "This program calculates the cubic spline for input data.\n";
-	cout << "The (x,y) data pairs should have been saved beforehand in a file named\n";
-	cout << "splinedata.txt, which should be in the same folder as the CubicSpline \n";
+	cout << "This program calculates a cubic spline for input data.\n";
+	cout << "The (x,y) data pairs must be saved beforehand in a file named\n";
+	cout << "splinedata.txt, which must be in the same folder as the CubicSpline \n";
 	cout << "executable.\n";
-	cout << "\nThe first entry in this file should be N, the number of (x, y)\n";
+	cout << "\nThe first entry in this file must be N, the number of (x, y)\n";
 	cout << "data pairs.\n";
-	cout << "\nThe second entry in this file should be NVAL, the number of x-values at which\n";
+	cout << "\nThe second entry in this file must be NVAL, the number of x-values at which\n";
 	cout << "interpolating values are to be calculated.\n";
-	cout << "\nNext, the (x,y) data pairs themselves should be listed.\n";
+	cout << "\nNext, the (x,y) data pairs themselves must be listed.\n";
 	cout << "THEY MUST BE LISTED IN ASCENDING VALUES OF X.\n";
 	cout << "\nFinally, the x-values at which interpolating values are to be calculated should\n";
 	cout << "be given in order of ascending value because the program execution is most\n";
@@ -68,8 +67,6 @@ int main()
 		
 		int mDim, NVAL;
 		
-		// NVAL is the number of points at which the interpolating function will be used to provide values
-
 		cout << "Appear to be ready. \n";
 
 		ifstream in("splinedata.txt", ios::in);
@@ -82,43 +79,48 @@ int main()
 		ofstream out("splineout.txt", ios::out);
 
 		if (!out) {
-			in.close();  //Close the input file
+			in.close();
 			cout << "Cannot open the output file. \n";
 			return 0;
 		}
 
-		in >> mDim;  //Input the number of known data pairs from the file
-		in >> NVAL;  //Input the number of x-values at which interpolating y-values are to be computed
+		in >> mDim >> NVAL;
+
+		// mDim is the number of known data pairs from the file
+		// NVAL is the number of x-values at which interpolating y-values are to be computed
 
 		if (mDim < 2)  {
-			in.close();  //Close the opened files
+			in.close();
 			out.close();
 			cout << "ierr = -1. Fewer than two data pairs input. Program terminated. \n";
+			cout << "\nEnter any key to continue. \n";
+			cin >> rflag;
 			return 0;
 		}
 
 		if (NVAL < 1){
-			in.close();  //Close the opened files
+			in.close();
 			out.close();
 			cout << "Fewer than one evaluation point specified.\n";
+			cout << "\nEnter any key to continue. \n";
+			cin >> rflag;
 			return 0;
 		}
 
-		int i, ierr = 0, ir = 1, j, jfirst = 0, nj;
-		int next[2];
+		int i, ierr = 0, ir = 1, j, jfirst = 0, next[2], nj;
 
 		double dummy, temp;		// Dummy variables
 		double h, xmi, xma;		// variables for cubic evaluation
 		double del1, del2, delta;	// variables for cubic evaluation
 		double c2, c2t2, c3, c3t3;// variables for cubic evaluation
 
-		C1DArray dVec, xVec, yVec;	// Arrays for d-, x-, and y-values.
+		C1DArray dVec, xVec, yVec;	// Arrays for d, x, and y values.
 		C1DArray dval, fval, xval;
 		C2DArray wk;				// wk array, a scratch (work) array
 
 		// xval is the array of x-values, the NVAL points at which interpolating function values will be calculated
-		// fval is the array of y-values, calculated by the interpolating function, calculated at each xval point
-		// dval is the array of derivative values, calculated by the interpolating function, calculated at each xval point
+		// fval is the array of y-values, calculated by the interpolating function at each xval point
+		// dval is the array of derivative values, calculated by the interpolating function at each xval point
 
 		try { // Resize the x, y, and d arrays to their required sizes
 			xVec.resize(mDim);
