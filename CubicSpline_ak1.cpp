@@ -1,6 +1,6 @@
 // CubicSpline_ak1.cpp - Program for calculating a cubic spline to input data.
 // Written in Microsoft Visual Studio Express 2013 for Windows Desktop
-// 22 March 2016
+// 24 March 2016
 //
 // This program is a translation of the FORTRAN routines PCHEV and PCHEZ 
 // written by David K.Kahaner, National Bureau of Standards.
@@ -33,7 +33,7 @@ int main()
 {
 	char rflag = 0;	//Readiness flag 
 
-	cout << "                     CubicSpline_ak1   (22 March 2016)\n";
+	cout << "                     CubicSpline_ak1   (24 March 2016)\n";
 	cout << "=========================================================================== \n";
 	cout << "This program calculates a cubic spline for input data.\n";
 	cout << "The (x,y) data pairs must be saved beforehand in a file named\n";
@@ -107,15 +107,15 @@ int main()
 			return 0;
 		}
 
-		int i, ierr = 0, ir = 1, j, jfirst = 0, next[2], nj;
+		int i, ierr = 0, ir = 1, j, jfirst = 0, next[2], nj = mDim - 1;
 
 		double dummy, temp;		// Dummy variables
-		double h, xmi, xma;		// variables for cubic evaluation
-		double del1, del2, delta;	// variables for cubic evaluation
-		double c2, c2t2, c3, c3t3;// variables for cubic evaluation
 
-		C1DArray dVec, xVec, yVec;	// Arrays for d, x, and y values.
-		C1DArray dval, fval, xval;
+		// Variables for cubic evaluation
+		double c2, c2t2, c3, c3t3, del1, del2, delta, h, xmi, xma;
+
+		C1DArray dVec, xVec, yVec;	// Arrays for derivative, x, and y values.
+		C1DArray dval, fval, xval;	// Arrays for interpolation derivative, x, and y values.
 		C2DArray wk;				// wk array, a scratch (work) array
 
 		// xval is the array of x-values, the NVAL points at which interpolating function values will be calculated
@@ -194,10 +194,13 @@ int main()
 //		return 0;
 
 		// The main program follows.
+
 		// Confirm that the data pairs are in order of increasing x
 		for (i = 1; i < mDim; ++i){
 			if (xVec[i] <= xVec[i - 1]){
 				cout << "ierr = -3. x array not strictly increasing. Program terminated.\n";
+				cout << "\nEnter any key to continue. \n";
+				cin >> rflag;
 				return 0;
 			}  // End if (xVec[i] <= xVec[i-1])
 		} //End for i
@@ -207,7 +210,7 @@ int main()
 		// Note that wk[0][0] and wk[1][0] are not filled in this first loop; they are presently left unassigned
 
 		j = 1;
-		for (i = 0; i < (mDim - 1); ++i){
+		for (i = 0; i < nj; ++i){
 			wk[0][j] = xVec[j] - xVec[i];
 			wk[1][j] = (yVec[j] - yVec[i]) / wk[0][j];
 			++j;
@@ -225,7 +228,14 @@ int main()
 			dVec[0] = ((temp + 2.0*wk[0][0])*wk[1][1] * wk[0][2] + dummy) / wk[0][0];
 		} // End else mDim > 2
 
-		nj = mDim - 1;
+		cout << "\n";
+		cout << "The x-differences, y-divided differences, and dVec values now follow:\n";
+		for (i = 0; i < mDim; ++i)
+			cout << wk[0][i] << "\t \t" << wk[1][i] << "\t \t" << dVec[i] << "\n";
+
+		cout << "\nEnter any key to continue. \n";
+		cin >> rflag;
+
 		for (i = 1; i < nj; ++i){
 			if (wk[1][i - 1] == 0){
 				cout << "Error Code 5008.\n";
@@ -241,41 +251,41 @@ int main()
 		} // End if mDim == 2
 		else { //else mDim != 2
 			if (mDim == 3){
-				dVec[mDim - 1] = 2.0*wk[1][mDim - 1];
-				wk[1][mDim - 1] = 1.0;
-				if (wk[1][mDim - 2] == 0){
+				dVec[2] = 2.0*wk[1][2];
+				wk[1][2] = 1.0;
+				if (wk[1][1] == 0){
 					cout << "Error Code 5008.\n";
 					return 0;
 				}
-				temp = -(1.0 / wk[1][mDim - 2]);
+				temp = -(1.0 / wk[1][1]);
 			}// End if (mDim == 3)
 			else {
-				temp = wk[0][mDim - 2] + wk[0][mDim - 1];
-				dummy = wk[0][mDim - 1] * wk[0][mDim - 1] * (yVec[mDim - 2] - yVec[mDim - 3]);
-				dummy /= wk[0][mDim - 2];
-				dVec[mDim - 1] = ((wk[0][mDim - 1] + 2.0*temp)*wk[1][mDim - 1] * wk[0][mDim - 2] + dummy) / temp;
-				if (wk[1][mDim - 2] == 0){
+				temp = wk[0][nj - 1] + wk[0][nj];
+				dummy = wk[0][nj] * wk[0][nj] * (yVec[nj - 1] - yVec[nj - 2]);
+				dummy /= wk[0][nj - 1];
+				dVec[nj] = ((wk[0][nj] + 2.0*temp)*wk[1][nj] * wk[0][nj - 1] + dummy) / temp;
+				if (wk[1][nj - 1] == 0){
 					cout << "Error Code 5008.\n";
 					return 0;
 				}
-				temp = -(temp / wk[1][mDim - 2]);
-				wk[1][mDim - 1] = wk[0][mDim - 2];
+				temp = -(temp / wk[1][nj - 1]);
+				wk[1][nj] = wk[0][nj - 1];
 			}//End else
 
 			// Complete forward pass of Gauss Elimination
 
-			wk[1][mDim - 1] = temp*wk[0][mDim - 2] + wk[1][mDim - 1];
-			if (wk[1][mDim - 1] == 0){
+			wk[1][nj] += temp*wk[0][nj - 1];
+			if (wk[1][nj] == 0){
 				cout << "Error Code 5008.\n";
 				return 0;
 			}
-			dVec[mDim - 1] = (temp*dVec[mDim - 2] + dVec[mDim - 1]) / wk[1][mDim - 1];
+			dVec[nj] = (temp*dVec[nj - 1] + dVec[nj]) / wk[1][nj];
 
 		} // End else mDim != 2
 
 		//Carry out back substitution
 
-		for (i = mDim - 2; i >= 0; --i){
+		for (i = nj - 1; i >= 0; --i){
 			if (wk[1][i] == 0){
 				cout << "Error Code 5008.\n";
 				return 0;
@@ -293,7 +303,7 @@ int main()
 		while (jfirst < NVAL){
 
 			// Locate all points in interval. 
-			for (i = jfirst; i < NVAL; i++){
+			for (i = jfirst; i < NVAL; ++i){
 				if (xval[i] >= xVec[ir]) break;
 			} // End for loop
 
@@ -407,7 +417,7 @@ int main()
 		out << "The interpolating data follows (xval, fval, dval):\n";
 		out << "\n";
 		for (i = 0; i < NVAL; ++i)
-			out << xval[i] << "  " << fval[i] << "  " << dval[i] << " \n";
+			out << xval[i] << "\t \t" << fval[i] << "\t \t" << dval[i] << " \n";
 
 		out << "\n";
 
