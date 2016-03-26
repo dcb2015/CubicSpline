@@ -1,6 +1,6 @@
 // CubicSpline_ak1.cpp - Program for calculating a cubic spline to input data.
 // Written in Microsoft Visual Studio Express 2013 for Windows Desktop
-// 24 March 2016
+// 25 March 2016
 //
 // This program is a translation of the FORTRAN routines PCHEV and PCHEZ 
 // written by David K.Kahaner, National Bureau of Standards.
@@ -33,7 +33,7 @@ int main()
 {
 	char rflag = 0;	//Readiness flag 
 
-	cout << "                     CubicSpline_ak1   (24 March 2016)\n";
+	cout << "                     CubicSpline_ak1   (25 March 2016)\n";
 	cout << "=========================================================================== \n";
 	cout << "This program calculates a cubic spline for input data.\n";
 	cout << "The (x,y) data pairs must be saved beforehand in a file named\n";
@@ -205,7 +205,7 @@ int main()
 			}  // End if (xVec[i] <= xVec[i-1])
 		} //End for i
 
-		// Differences between the x-values are now stored in wk[0][. .], starting with wk[0][1]
+		// Differences between the x-values are stored in wk[0][. .], starting with wk[0][1]
 		// Divided differences between y-values are stored in wk[1][. .], starting with wk[1][1]
 		// Note that wk[0][0] and wk[1][0] are not filled in this first loop; they are presently left unassigned
 
@@ -349,8 +349,8 @@ int main()
 					temp = xval[jfirst + j] - xVec[ir - 1];
 					fval[jfirst + j] = yVec[ir - 1] + temp*(dVec[ir - 1] + temp*(c2 + temp*c3));
 					dval[jfirst + j] = dVec[ir - 1] + temp*(c2t2 + temp*c3t3);
-					if (temp < xmi) next[0] = next[0] + 1;
-					if (temp > xma) next[1] = next[1] + 1;
+					if (temp < xmi) next[0] += 1;
+					if (temp > xma) next[1] += 1;
 					// Note the redundancy: if either condition is true, other is false
 				} // End for j loop
 
