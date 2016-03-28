@@ -1,6 +1,6 @@
 // CubicSpline_ak1.cpp - Program for calculating a cubic spline to input data.
 // Written in Microsoft Visual Studio Express 2013 for Windows Desktop
-// 25 March 2016
+// 28 March 2016
 //
 // This program is a translation of the FORTRAN routines PCHEV and PCHEZ 
 // written by David K.Kahaner, National Bureau of Standards.
@@ -12,7 +12,7 @@
 //
 // http://www.netlib.org/slatec/
 //
-// To distinguish this program from others, an _ak1 suffix has been appended to its name.
+// To distinguish this program from others, an '_ak1' suffix has been appended to its name.
 //
 // In this program, data is input from a file to eliminate the need for a user to type data in via
 // the console.
@@ -33,7 +33,7 @@ int main()
 {
 	char rflag = 0;	//Readiness flag 
 
-	cout << "                     CubicSpline_ak1   (25 March 2016)\n";
+	cout << "                     CubicSpline_ak1   (28 March 2016)\n";
 	cout << "=========================================================================== \n";
 	cout << "This program calculates a cubic spline for input data.\n";
 	cout << "The (x,y) data pairs must be saved beforehand in a file named\n";
@@ -176,18 +176,18 @@ int main()
 		in.close();  //Close the input file
 
 		// Echo the data pairs to the console, to ensure it was input correctly
-		cout << "\n";
-		cout << mDim << " data pairs were input.\n";
-		cout << "The data pairs follow:\n";
-		for (i = 0; i < mDim; ++i)
-			cout << xVec[i] << "     " << yVec[i] << "\n";
+//		cout << "\n";
+//		cout << mDim << " data pairs were input.\n";
+//		cout << "The data pairs follow:\n";
+//		for (i = 0; i < mDim; ++i)
+//			cout << xVec[i] << "     " << yVec[i] << "\n";
 
 		// Echo the xInt values to the console, to ensure they were input correctly
-		cout << "\n";
-		cout << NVAL << " xInt values were input.\n";
-		cout << "The xInt values follow:\n";
-		for (i = 0; i < NVAL; ++i)
-			cout << xval[i] << "\n";
+//		cout << "\n";
+//		cout << NVAL << " xInt values were input.\n";
+//		cout << "The xInt values follow:\n";
+//		for (i = 0; i < NVAL; ++i)
+//			cout << xval[i] << "\n";
 
 //		cout << "\nEnter any key to continue. \n";
 //		cin >> rflag;
@@ -218,38 +218,27 @@ int main()
 
 		if (mDim == 2){
 			wk[1][0] = wk[0][0] = 1.0;
-			dVec[0] = 2.0*wk[1][1];
-		}// End if (mDim == 2)
-		else { // else mDim > 2
+			dVec[0] = dVec[1] = wk[1][1];
+			dVec[0] *= 2.0;
+		} // End if mDim == 2
+		else { //else mDim > 2
+
 			temp = dummy = wk[0][1];
 			wk[1][0] = wk[0][2];
 			wk[0][0] = temp + wk[0][2];
 			dummy *= dummy*wk[1][2];
 			dVec[0] = ((temp + 2.0*wk[0][0])*wk[1][1] * wk[0][2] + dummy) / wk[0][0];
-		} // End else mDim > 2
 
-		cout << "\n";
-		cout << "The x-differences, y-divided differences, and dVec values now follow:\n";
-		for (i = 0; i < mDim; ++i)
-			cout << wk[0][i] << "\t \t" << wk[1][i] << "\t \t" << dVec[i] << "\n";
+			for (i = 1; i < nj; ++i){
+				if (wk[1][i - 1] == 0){
+					cout << "Error Code 5008.\n";
+					return 0;
+				}
+				temp = -(wk[0][i + 1] / wk[1][i - 1]);
+				dVec[i] = temp*dVec[i - 1] + 3.0*(wk[0][i] * wk[1][i + 1] + wk[0][i + 1] * wk[1][i]);
+				wk[1][i] = temp*wk[0][i - 1] + 2.0*(wk[0][i] + wk[0][i + 1]);
+			}//End for i
 
-		cout << "\nEnter any key to continue. \n";
-		cin >> rflag;
-
-		for (i = 1; i < nj; ++i){
-			if (wk[1][i - 1] == 0){
-				cout << "Error Code 5008.\n";
-				return 0;
-			}
-			temp = -(wk[0][i + 1] / wk[1][i - 1]);
-			dVec[i] = temp*dVec[i - 1] + 3.0*(wk[0][i] * wk[1][i + 1] + wk[0][i + 1] * wk[1][i]);
-			wk[1][i] = temp*wk[0][i - 1] + 2.0*(wk[0][i] + wk[0][i + 1]);
-		}//End for i
-
-		if (mDim == 2){
-			dVec[1] = wk[1][1];
-		} // End if mDim == 2
-		else { //else mDim != 2
 			if (mDim == 3){
 				dVec[2] = 2.0*wk[1][2];
 				wk[1][2] = 1.0;
@@ -259,7 +248,7 @@ int main()
 				}
 				temp = -(1.0 / wk[1][1]);
 			}// End if (mDim == 3)
-			else {
+			else { // else (mDim > 3)
 				temp = wk[0][nj - 1] + wk[0][nj];
 				dummy = wk[0][nj] * wk[0][nj] * (yVec[nj - 1] - yVec[nj - 2]);
 				dummy /= wk[0][nj - 1];
@@ -270,7 +259,7 @@ int main()
 				}
 				temp = -(temp / wk[1][nj - 1]);
 				wk[1][nj] = wk[0][nj - 1];
-			}//End else
+			}//End else (mDim > 3)
 
 			// Complete forward pass of Gauss Elimination
 
@@ -281,7 +270,15 @@ int main()
 			}
 			dVec[nj] = (temp*dVec[nj - 1] + dVec[nj]) / wk[1][nj];
 
-		} // End else mDim != 2
+		} // End else mDim > 2
+
+//		cout << "\n";
+//		cout << "The x-differences, y-divided differences, and dVec values now follow:\n";
+//		for (i = 0; i < mDim; ++i)
+//			cout << wk[0][i] << "\t \t" << wk[1][i] << "\t \t" << dVec[i] << "\n";
+
+//		cout << "\nEnter any key to continue. \n";
+//		cin >> rflag;
 
 		//Carry out back substitution
 
